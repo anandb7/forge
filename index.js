@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const OpenAI = require('openai');
 const express = require('express');
 const path = require('path');
+const Hyperspell = require('hyperspell').default;
 
 // Initialize Discord client
 const discord = new Client({
@@ -16,6 +17,13 @@ const discord = new Client({
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Initialize Hyperspell (Sponsor Integration - Context Management)
+const hyperspell = new Hyperspell({
+  apiKey: process.env.HYPERSPELL_API_KEY,
+});
+
+const HYPERSPELL_COLLECTION = process.env.HYPERSPELL_COLLECTION || 'forge-b4x6';
 
 // Initialize Express web server
 const app = express();
@@ -32,8 +40,63 @@ let productState = {
   tech_stack: [],
   constraints: [],
   frozen: false,
-  history: []
+  history: [],
+  hyperspellEnabled: true
 };
+
+// ========================================
+// 🔮 HYPERSPELL HELPERS (Sponsor Integration)
+// ========================================
+
+// Store message in Hyperspell for long-term context
+async function storeInHyperspell(author, content, metadata = {}) {
+  if (!productState.hyperspellEnabled) return null;
+
+  try {
+    const memory = await hyperspell.memories.add({
+      text: content,
+      collection: HYPERSPELL_COLLECTION,
+      metadata: {
+        author,
+        timestamp: new Date().toISOString(),
+        product_name: productState.product_name || 'unknown',
+        ...metadata
+      }
+    });
+    console.log(`✅ Stored in Hyperspell: ${memory.resource_id}`);
+    return memory.resource_id;
+  } catch (error) {
+    console.error('❌ Hyperspell storage error:', error.message);
+    return null;
+  }
+}
+
+// Retrieve relevant context from Hyperspell
+async function getHyperspellContext(query = null) {
+  if (!productState.hyperspellEnabled) return [];
+
+  try {
+    const memories = [];
+    const page = await hyperspell.memories.list({
+      collection: HYPERSPELL_COLLECTION,
+      limit: 50 // Get last 50 messages
+    });
+
+    for (const memory of page.items) {
+      memories.push({
+        text: memory.text,
+        metadata: memory.metadata,
+        id: memory.id
+      });
+    }
+
+    console.log(`📚 Retrieved ${memories.length} memories from Hyperspell`);
+    return memories;
+  } catch (error) {
+    console.error('❌ Hyperspell retrieval error:', error.message);
+    return [];
+  }
+}
 
 // ========================================
 // 🤖 LLM HELPER: Extract Structured Updates
@@ -177,6 +240,12 @@ async function generateMVP() {
   try {
     const spec = generateSummary();
 
+    // 🔮 Retrieve full conversation context from Hyperspell (Sponsor Integration)
+    const hyperspellMemories = await getHyperspellContext();
+    const conversationContext = hyperspellMemories.length > 0
+      ? `\n\nFull Conversation History (from Hyperspell):\n${hyperspellMemories.map(m => `- ${m.metadata?.author || 'User'}: ${m.text}`).join('\n')}`
+      : '';
+
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -197,7 +266,7 @@ Be concise but complete. Use modern React patterns.`
         },
         {
           role: "user",
-          content: `Product Specification:\n${spec}\n\nGenerate the MVP code.`
+          content: `Product Specification:\n${spec}${conversationContext}\n\nGenerate the MVP code.`
         }
       ],
       temperature: 0.7,
@@ -226,6 +295,29 @@ discord.on('messageCreate', async (message) => {
   if (content === '!summary') {
     const summary = generateSummary();
     return message.reply(summary);
+  }
+
+  // ========================================
+  // 🔧 COMMAND: !context (Hyperspell)
+  // ========================================
+  if (content === '!context') {
+    const memories = await getHyperspellContext();
+    if (memories.length === 0) {
+      return message.reply("📚 No context stored in Hyperspell yet.");
+    }
+
+    let contextSummary = `📚 **Hyperspell Context** (${memories.length} memories)\n\n`;
+    contextSummary += `🔮 Powered by Hyperspell - Sponsor Integration\n`;
+    contextSummary += `Collection: ${HYPERSPELL_COLLECTION}\n\n`;
+    contextSummary += `Recent memories:\n`;
+
+    memories.slice(0, 5).forEach((mem, idx) => {
+      const author = mem.metadata?.author || 'Unknown';
+      const text = mem.text.substring(0, 100) + (mem.text.length > 100 ? '...' : '');
+      contextSummary += `${idx + 1}. **${author}**: ${text}\n`;
+    });
+
+    return message.reply(contextSummary);
   }
 
   // ========================================
@@ -273,6 +365,12 @@ discord.on('messageCreate', async (message) => {
       timestamp: new Date().toISOString()
     });
 
+    // 🔮 Store in Hyperspell for long-term context (Sponsor Integration)
+    await storeInHyperspell(message.author.username, content, {
+      channel: message.channel.name,
+      messageId: message.id
+    });
+
     // Extract structured updates via LLM
     const updates = await extractProductUpdates(content);
 
@@ -296,8 +394,10 @@ discord.on('messageCreate', async (message) => {
 discord.on('ready', () => {
   console.log(`✅ Forge bot logged in as ${discord.user.tag}`);
   console.log(`🎯 Ready to capture product specs!`);
+  console.log(`🔮 Hyperspell enabled - Context collection: ${HYPERSPELL_COLLECTION}`);
   console.log(`\nCommands:`);
   console.log(`  !summary  - View current spec`);
+  console.log(`  !context  - View Hyperspell context`);
   console.log(`  !freeze   - Lock spec`);
   console.log(`  !generate - Generate MVP`);
 });

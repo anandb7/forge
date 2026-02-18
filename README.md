@@ -28,7 +28,20 @@ A Discord bot that turns live team conversations into structured product specs a
 2. Create new API key
 3. Copy and save
 
-### 3. Configure Environment
+### 3. Get Hyperspell API Key (Sponsor Integration)
+
+1. Sign up at [Hyperspell](https://www.hyperspell.com/)
+2. Create a new project/collection
+3. Copy your API key
+4. Hyperspell provides the context & memory layer for your AI agents
+
+**Why Hyperspell?**
+- 🔮 Long-term context storage for all product conversations
+- 📚 Persistent memory across bot restarts
+- 🚀 Fast context retrieval for MVP generation
+- 💪 Scales to thousands of messages
+
+### 4. Configure Environment
 
 ```bash
 cp .env.example .env
@@ -54,6 +67,8 @@ Just chat about your product idea. The bot will automatically extract:
 ### Commands
 
 **`!summary`** - View current structured product spec
+
+**`!context`** - View Hyperspell context (see what's stored in memory)
 
 **`!freeze`** - Lock the spec (no more updates from chat)
 
