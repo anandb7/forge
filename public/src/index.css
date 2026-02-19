@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 230 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 93%;
+    --secondary-foreground: 222 47% 20%;
+
+    --muted: 220 18% 93%;
+    --muted-foreground: 220 13% 52%;
+
+    --accent: 195 90% 47%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
+    --ring: 230 70% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom gradient tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(230, 70%, 15%) 0%, hsl(220, 80%, 25%) 50%, hsl(210, 90%, 30%) 100%);
+    --gradient-card-accent: linear-gradient(135deg, hsl(230, 70%, 50%) 0%, hsl(195, 90%, 47%) 100%);
+    --gradient-stat-blue: linear-gradient(135deg, hsl(230, 70%, 50%) 0%, hsl(240, 60%, 60%) 100%);
+    --gradient-stat-cyan: linear-gradient(135deg, hsl(195, 90%, 47%) 0%, hsl(180, 80%, 45%) 100%);
+    --gradient-stat-green: linear-gradient(135deg, hsl(142, 72%, 40%) 0%, hsl(160, 70%, 42%) 100%);
+    --gradient-stat-orange: linear-gradient(135deg, hsl(25, 90%, 55%) 0%, hsl(38, 92%, 50%) 100%);
+
+    --shadow-card: 0 1px 3px 0 hsl(220 20% 11% / 0.08), 0 4px 16px -2px hsl(220 20% 11% / 0.06);
+    --shadow-card-hover: 0 4px 12px 0 hsl(220 20% 11% / 0.12), 0 16px 40px -4px hsl(220 20% 11% / 0.1);
+    --shadow-primary: 0 4px 20px -2px hsl(230 70% 50% / 0.35);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  .gradient-card-accent {
+    background: var(--gradient-card-accent);
+  }
+  .gradient-stat-blue {
+    background: var(--gradient-stat-blue);
+  }
+  .gradient-stat-cyan {
+    background: var(--gradient-stat-cyan);
+  }
+  .gradient-stat-green {
+    background: var(--gradient-stat-green);
+  }
+  .gradient-stat-orange {
+    background: var(--gradient-stat-orange);
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  .shadow-primary {
+    box-shadow: var(--shadow-primary);
+  }
+}

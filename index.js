@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const OpenAI = require('openai');
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
 const { spawn } = require('child_process');
 const Hyperspell = require('hyperspell').default;
@@ -31,6 +32,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors()); // Enable CORS for React dashboard
 app.use(express.json());
 app.use(express.static(__dirname));
 
