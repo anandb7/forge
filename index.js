@@ -324,6 +324,23 @@ discord.on('messageCreate', async (message) => {
   }
 
   // ========================================
+  // 🔧 COMMAND: !reset
+  // ========================================
+  if (content === '!reset') {
+    // Reset in-memory state
+    productState.product_name = "";
+    productState.target_users = "";
+    productState.problem_statement = "";
+    productState.core_features = [];
+    productState.tech_stack = [];
+    productState.constraints = [];
+    productState.frozen = false;
+    productState.history = [];
+
+    return message.reply("🔄 **Product state reset!**\n\nIn-memory state cleared. Hyperspell memories remain for persistent context.\n\nStart a new conversation or run simulation again!");
+  }
+
+  // ========================================
   // 🔧 COMMAND: !freeze
   // ========================================
   if (content === '!freeze') {
@@ -401,6 +418,7 @@ discord.on('ready', () => {
   console.log(`\nCommands:`);
   console.log(`  !summary  - View current spec`);
   console.log(`  !context  - View Hyperspell context`);
+  console.log(`  !reset    - Clear product state`);
   console.log(`  !freeze   - Lock spec`);
   console.log(`  !generate - Generate MVP`);
 });
