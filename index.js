@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const OpenAI = require('openai');
 const express = require('express');
 const path = require('path');
+const { spawn } = require('child_process');
 const Hyperspell = require('hyperspell').default;
 
 // Initialize Discord client
@@ -284,8 +285,8 @@ Be concise but complete. Use modern React patterns.`
 // 💬 DISCORD MESSAGE HANDLER
 // ========================================
 discord.on('messageCreate', async (message) => {
-  // Ignore bot messages
-  if (message.author.bot) return;
+  // Ignore messages from self only (allow simulation bots)
+  if (message.author.bot && message.author.id === discord.user.id) return;
 
   const content = message.content.trim();
 
@@ -321,6 +322,64 @@ discord.on('messageCreate', async (message) => {
     }
 
     return message.reply(contextSummary);
+  }
+
+  // ========================================
+  // 🔧 COMMAND: !simulate
+  // ========================================
+  if (content === '!simulate' || content === '!simulate foodforgood') {
+    await message.reply("🎬 **Starting Food for Good simulation...**\n\nThe engineer bot will send 48 messages simulating a realistic product planning session.\n\nWatch as Forge extracts the product spec in real-time!");
+
+    const simulation = spawn('node', ['simulate-foodforgood.js', message.channel.id], {
+      cwd: __dirname
+    });
+
+    simulation.stdout.on('data', (data) => {
+      console.log(`[Simulation] ${data}`);
+    });
+
+    simulation.stderr.on('data', (data) => {
+      console.error(`[Simulation Error] ${data}`);
+    });
+
+    simulation.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Simulation completed successfully');
+      } else {
+        console.error(`❌ Simulation failed with code ${code}`);
+        message.channel.send("❌ Simulation encountered an error. Check console logs.");
+      }
+    });
+
+    return;
+  }
+
+  // Alternative: Simple fitness tracker simulation
+  if (content === '!simulate fitness') {
+    await message.reply("🎬 **Starting Fitness Tracker simulation...**\n\nThe engineer bot will send 13 messages about a fitness app.\n\nWatch Forge extract the spec!");
+
+    const simulation = spawn('node', ['simulate-team.js', message.channel.id], {
+      cwd: __dirname
+    });
+
+    simulation.stdout.on('data', (data) => {
+      console.log(`[Simulation] ${data}`);
+    });
+
+    simulation.stderr.on('data', (data) => {
+      console.error(`[Simulation Error] ${data}`);
+    });
+
+    simulation.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Simulation completed successfully');
+      } else {
+        console.error(`❌ Simulation failed with code ${code}`);
+        message.channel.send("❌ Simulation encountered an error. Check console logs.");
+      }
+    });
+
+    return;
   }
 
   // ========================================
@@ -416,11 +475,13 @@ discord.on('ready', () => {
   console.log(`🎯 Ready to capture product specs!`);
   console.log(`🔮 Hyperspell enabled - Context collection: ${HYPERSPELL_COLLECTION}`);
   console.log(`\nCommands:`);
-  console.log(`  !summary  - View current spec`);
-  console.log(`  !context  - View Hyperspell context`);
-  console.log(`  !reset    - Clear product state`);
-  console.log(`  !freeze   - Lock spec`);
-  console.log(`  !generate - Generate MVP`);
+  console.log(`  !simulate        - Run Food for Good demo (48 messages)`);
+  console.log(`  !simulate fitness - Run Fitness Tracker demo (13 messages)`);
+  console.log(`  !summary         - View current spec`);
+  console.log(`  !context         - View Hyperspell context`);
+  console.log(`  !reset           - Clear product state`);
+  console.log(`  !freeze          - Lock spec`);
+  console.log(`  !generate        - Generate MVP`);
 });
 
 // ========================================

@@ -131,7 +131,7 @@ async function runSimulation(channelId) {
     ],
   });
 
-  await client.login(process.env.DISCORD_TOKEN);
+  await client.login(process.env.SIMULATOR_BOT_TOKEN || process.env.DISCORD_TOKEN);
 
   await new Promise(resolve => {
     client.once('ready', () => {
