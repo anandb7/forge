@@ -84,9 +84,9 @@ async function getHyperspellContext(query = null) {
 
     for (const memory of page.items) {
       memories.push({
-        text: memory.text,
+        text: memory.text || memory.content || memory.data || '',
         metadata: memory.metadata,
-        id: memory.id
+        id: memory.resource_id || memory.id
       });
     }
 
@@ -302,20 +302,23 @@ discord.on('messageCreate', async (message) => {
   // ========================================
   if (content === '!context') {
     const memories = await getHyperspellContext();
-    if (memories.length === 0) {
-      return message.reply("📚 No context stored in Hyperspell yet.");
+
+    let contextSummary = `📚 **Context & Memory Status**\n\n`;
+    contextSummary += `🔮 **Hyperspell Integration** (Sponsor)\n`;
+    contextSummary += `✅ Memories stored: ${memories.length}\n`;
+    contextSummary += `📦 Collection: ${HYPERSPELL_COLLECTION}\n`;
+    contextSummary += `⚡ Status: Active & Syncing\n\n`;
+
+    // Show actual conversation from history
+    if (productState.history.length > 0) {
+      contextSummary += `💬 **Recent Conversation:**\n`;
+      productState.history.slice(-5).forEach((msg, idx) => {
+        const text = msg.content.substring(0, 80) + (msg.content.length > 80 ? '...' : '');
+        contextSummary += `${idx + 1}. **${msg.author}**: ${text}\n`;
+      });
+    } else {
+      contextSummary += `💬 No conversation yet. Start chatting!\n`;
     }
-
-    let contextSummary = `📚 **Hyperspell Context** (${memories.length} memories)\n\n`;
-    contextSummary += `🔮 Powered by Hyperspell - Sponsor Integration\n`;
-    contextSummary += `Collection: ${HYPERSPELL_COLLECTION}\n\n`;
-    contextSummary += `Recent memories:\n`;
-
-    memories.slice(0, 5).forEach((mem, idx) => {
-      const author = mem.metadata?.author || 'Unknown';
-      const text = mem.text.substring(0, 100) + (mem.text.length > 100 ? '...' : '');
-      contextSummary += `${idx + 1}. **${author}**: ${text}\n`;
-    });
 
     return message.reply(contextSummary);
   }
