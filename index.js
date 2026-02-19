@@ -30,6 +30,10 @@ const HYPERSPELL_COLLECTION = process.env.HYPERSPELL_COLLECTION || 'forge-b4x6';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
+app.use(express.json());
+app.use(express.static(__dirname));
+
 // ========================================
 // 🧠 STRUCTURED PRODUCT STATE (In-Memory)
 // ========================================
@@ -509,8 +513,78 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
-// Serve dashboard HTML
+// API: Generate PRD from Hyperspell memories + OpenAI
+app.post('/api/generate-prd', async (req, res) => {
+  try {
+    const { state } = req.body;
+
+    // Get Hyperspell context
+    const memories = await getHyperspellContext();
+    const conversationContext = memories.map(m =>
+      `${m.metadata?.author || 'User'}: ${m.text || m.metadata?.content || '[message]'}`
+    ).join('\n');
+
+    // Generate PRD with GPT-4
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `You are a senior product manager. Generate a comprehensive Product Requirements Document (PRD) based on the product discussions and specifications provided.
+
+The PRD should include:
+1. Executive Summary
+2. Problem Statement
+3. Goals & Success Metrics
+4. Target Users & Personas
+5. Key Features & Requirements
+6. Technical Architecture
+7. Timeline & Milestones
+8. Risks & Mitigation
+
+Use professional formatting with clear sections. Be specific and actionable.`
+        },
+        {
+          role: "user",
+          content: `Product Specification:
+Product Name: ${state.product_name || 'Unknown'}
+Target Users: ${state.target_users || 'Not specified'}
+Problem: ${state.problem_statement || 'Not specified'}
+
+Core Features:
+${state.core_features?.map(f => `- ${f}`).join('\n') || 'None specified'}
+
+Tech Stack:
+${state.tech_stack?.map(t => `- ${t}`).join('\n') || 'None specified'}
+
+Constraints:
+${state.constraints?.map(c => `- ${c}`).join('\n') || 'None specified'}
+
+Conversation History (from Hyperspell):
+${conversationContext || 'No conversation history available'}
+
+Generate a comprehensive PRD based on this information.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2500,
+    });
+
+    const prd = response.choices[0].message.content;
+    res.json({ prd });
+  } catch (error) {
+    console.error("Error generating PRD:", error);
+    res.status(500).json({ error: 'Failed to generate PRD', message: error.message });
+  }
+});
+
+// Serve enhanced dashboard HTML
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// Keep old dashboard for backwards compatibility
+app.get('/old-dashboard', (req, res) => {
   res.send(`
 <!DOCTYPE html>
 <html lang="en">
